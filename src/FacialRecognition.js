@@ -41,7 +41,7 @@ function FacialRecognition() {
             
   
             if (data.age == false) {
-                fullTextResponse += '<b>The image does not contain adult content</b><br />';
+                fullTextResponse += '<b>The age is </b><br />';
             }
             else {
                 fullTextResponse += 'The image does contain adult content<br />';
