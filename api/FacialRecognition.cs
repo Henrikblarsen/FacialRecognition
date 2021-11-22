@@ -1,50 +1,57 @@
+using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 
 namespace Company.Custom
 {
+
     class FacialRecognition
     {
+        [FunctionName("FacialRecognition")]
+        public static async Task<IActionResult>  Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest
+            req, ILogger log, ExecutionContext context)
+        {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(context.FunctionAppDirectory)
+                .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
 
         // URL for the images.
-        const string IMAGE_BASE_URL = "https://static.standard.co.uk/2021/08/31/20/newFile.jpg?width=968&auto=webp&quality=75&crop=968%3A645%2Csmart";
+        //const string IMAGE_BASE_URL = "https://static.standard.co.uk/2021/08/31/20/newFile.jpg?width=968&auto=webp&quality=75&crop=968%3A645%2Csmart";
 
         // <snippet_creds>
         // From your Face subscription in the Azure portal, get your subscription key and endpoint.
-        const string SUBSCRIPTION_KEY = "e8abd93bfca34bb9984d4985b0fc7cf2";
-        const string ENDPOINT = "https://appwithfacialrecognition.cognitiveservices.azure.com/";
+            string SUBSCRIPTION_KEY = "5f482c987e7e4396acf27b904a315a63";
+            const string ENDPOINT = "https://facialreognitionhbla.cognitiveservices.azure.com/";
         // </snippet_creds>
 
-        static void Main(string[] args)
-        {
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject(requestBody);
 
-            // <snippet_detect_models>
-            // Recognition model 4 was released in 2021 February.
-            // It is recommended since its accuracy is improved
-            // on faces wearing masks compared with model 3,
-            // and its overall accuracy is improved compared
-            // with models 1 and 2.
+            string imageUrl = data?.imageUrl;
+
             const string RECOGNITION_MODEL4 = RecognitionModel.Recognition04;
-            // </snippet_detect_models>
 
-			// <snippet_maincalls>
-            // Authenticate.
             IFaceClient client = Authenticate(ENDPOINT, SUBSCRIPTION_KEY);
-            // </snippet_client>
 
-            // Detect - get features from faces.
-            DetectFaceExtract(client, IMAGE_BASE_URL, RECOGNITION_MODEL4).Wait();
+           DetectFaceExtract(client, imageUrl, RECOGNITION_MODEL4).Wait();
+
+            return new OkObjectResult(RecognitionModel.Recognition04);
         }
 
-        // <snippet_auth>
-        /*
-		 *	AUTHENTICATE
-		 *	Uses subscription key and region to create a client.
-		 */
-        public static IFaceClient Authenticate(string endpoint, string key)
+       public static IFaceClient Authenticate(string endpoint, string key)
         {
         return new FaceClient(new ApiKeyServiceClientCredentials(key)) { Endpoint = endpoint };
         }
@@ -54,7 +61,7 @@ namespace Company.Custom
 		 * DETECT FACES
 		 * Detects features from faces and IDs them.
 		 */
-        public static async Task DetectFaceExtract(IFaceClient client, string url, string recognitionModel)
+        public static async Task DetectFaceExtract(IFaceClient client, string imageUrl, string recognitionModel)
         {
 
             // Create a list of images
@@ -73,7 +80,7 @@ namespace Company.Custom
                 IList<DetectedFace> detectedFaces;
 
                 // Detect faces with all attributes from image url.
-                detectedFaces = await client.Face.DetectWithUrlAsync($"{url}{imageFileName}",
+                detectedFaces = await client.Face.DetectWithUrlAsync(imageUrl,
                         returnFaceAttributes: new List<FaceAttributeType> { FaceAttributeType.Accessories, FaceAttributeType.Age,
                         FaceAttributeType.Blur, FaceAttributeType.Emotion, FaceAttributeType.Exposure, FaceAttributeType.FacialHair,
                         FaceAttributeType.Gender, FaceAttributeType.Glasses, FaceAttributeType.Hair, FaceAttributeType.HeadPose,
