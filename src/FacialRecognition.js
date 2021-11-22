@@ -1,6 +1,6 @@
-const uri = 'https://lemon-sand-0a6607a03.azurestaticapps.net';
+const uri = 'https://lemon-sand-0a6607a03.azurestaticapps.net/api/FacialRecognition';
 
-function analyzeImage() {   
+function FacialRecognition() {   
     var imageUrl = document.getElementById('imageUrlInput').value;
     var isValidUrl = validateUrl(imageUrl);
 
