@@ -37,14 +37,14 @@ function FacialRecognition() {
 
             var fullTextResponse = '<h4>Analyze result</h4>';
 
-            fullTextResponse += '<p><b>Description</b>: ' + data.description.captions[0].text + '.<p/> ';
+            fullTextResponse += '<p><b>Description</b>: ' + FaceAttributeType.Age[0].text + '.<p/> ';
             
   
-            if (data.age == false) {
+            if (FaceAttributeType.Age == false) {
                 fullTextResponse += '<b>The age is </b><br />';
             }
             else {
-                fullTextResponse += 'The image does contain adult content<br />';
+                fullTextResponse += 'The age cannot be determined<br />';
             }
 
 
